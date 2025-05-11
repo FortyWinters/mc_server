@@ -3,7 +3,7 @@
 # Install
 
 ```shell
-git https://github.com/FortyWinters/mc_server.git /opt/minecraft
+git clone https://github.com/FortyWinters/mc_server.git /opt/minecraft
 
 ```
 
