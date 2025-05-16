@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=%WORK_DIR%/start.sh
-ExecStop=%WORK_DIR%/stop.sh
+ExecStart=%WORK_DIR%/scripts/start.sh
+ExecStop=%WORK_DIR%/scripts/stop.sh
 
 [Install]
 WantedBy=multi-user.target
