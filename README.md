@@ -1,4 +1,4 @@
-# minecraft-service-kit
+# minecraft-server-kit
 
 一个简洁高效的Minecraft服务器管理工具，支持多版本/整合包部署、但实例运行、自动备份与控制台管理。
 
