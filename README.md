@@ -5,6 +5,9 @@
 ---
 
 ## 📁 目录结构
+```bash
+git clone https://github.com/FortyWinters/minecraft-server-kit.git /opt/minecraft
+```
 
 ```
 /opt/minecraft/
