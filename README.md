@@ -47,8 +47,6 @@ git clone https://github.com/FortyWinters/minecraft-server-kit.git /opt/minecraf
 2. **至少需要包含以下文件：**
 
    - `server.jar`（服务器核心）
-   - `eula.txt`
-   - `server.properties`
 
 ---
 
