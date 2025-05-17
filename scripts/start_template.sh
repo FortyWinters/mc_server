@@ -1,22 +1,21 @@
 #!/bin/bash
-# minecraft_server/scripts/start_template.sh
 
-SERVER_DIR="/opt/minecraft/server/REPLACE_ME"
+SERVER_DIR="WORK_DIR"
+JAR_FILE="JAR_FILE"
 SCREEN_NAME="mc-$(basename "$SERVER_DIR")"
-JAR_FILE="server.jar"  # 會由 run.sh 替換
 
 cd "$SERVER_DIR" || exit 1
 
 if [ ! -f "$JAR_FILE" ]; then
-    echo "Error: JAR file not found: $JAR_FILE"
+    echo "$JAR_FILE not found"
     exit 1
 fi
 
-echo "Starting Minecraft server in $SERVER_DIR..."
+echo "starting mc server in $SERVER_DIR..."
 
 if screen -list | grep -q "$SCREEN_NAME"; then
-    echo "Error: Screen session $SCREEN_NAME is already running."
-    echo "You can attach it using: screen -r $SCREEN_NAME"
+    echo "screen session $SCREEN_NAME is already running."
+    echo "you can attach it with './manage.sh attach'"
     exit 1
 fi
 

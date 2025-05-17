@@ -1,21 +1,20 @@
 #!/bin/bash
-# /opt/minecraft/install.sh
 
 ROOT_DIR="/opt/minecraft"
-BACKUP_DIR="/storage/minecraft_backup"
 SCRIPTS_DIR="$ROOT_DIR/scripts"
+BACKUP_DIR="/storage/minecraft_backup"
 
 create_dir_if_not_exists() {
     local dir_path="$1"
     if [ ! -d "$dir_path" ]; then
-        echo "Creating directory: $dir_path"
+        echo "creating directory: $dir_path"
         mkdir -p "$dir_path"
     fi
 }
 
 if [ "$(pwd)" != "$ROOT_DIR" ]; then
-    echo "Error: script must be run from $ROOT_DIR"
-    echo "Current directory: $(pwd)"
+    echo "install.sh must be run from $ROOT_DIR"
+    echo "current directory: $(pwd)"
     exit 1
 fi
 
@@ -47,7 +46,7 @@ WORK_DIR="$ROOT_DIR/server/$SERVER_FOLDER"
 SCRIPTS_TARGET_DIR="$WORK_DIR/scripts"
 
 if [ ! -d "$WORK_DIR" ]; then
-    echo "Error: WORK_DIR does not exist: $WORK_DIR"
+    echo "$WORK_DIR does not exist"
     exit 1
 fi
 
@@ -61,7 +60,7 @@ check_and_stop_other_services() {
 
     for service in $running_services; do
         if [ "$service" != "$current_service" ]; then
-            echo "[INFO] Stopping and disabling other Minecraft service: $service"
+            echo "stopping and disabling other Minecraft service: $service"
             systemctl stop "$service"
             systemctl disable "$service"
         fi
@@ -71,89 +70,69 @@ check_and_stop_other_services() {
 check_and_modify_eula() {
     local eula_file="$1"
     if [ ! -f "$eula_file" ]; then
-        echo "Error: eula.txt not found at $eula_file"
+        echo "eula.txt not found at $eula_file"
         exit 1
     fi
     sed -i 's/eula=false/eula=true/' "$eula_file"
-    echo "[INFO] eula.txt has been set to eula=true"
+    echo "eula.txt has been set to eula=true"
 }
 
 check_and_modify_server_properties() {
     local server_properties_file="$1"
     if [ ! -f "$server_properties_file" ]; then
-        echo "Error: server.properties not found at $server_properties_file"
+        echo "server.properties not found at $server_properties_file"
         exit 1
     fi
     sed -i 's/online-mode=true/online-mode=false/' "$server_properties_file"
-    echo "[INFO] server.properties set to online-mode=false"
+    echo "server.properties set to online-mode=false"
 }
 
 check_and_stop_other_services
 
-# 找出 JAR 文件名稱
 jar_file=$(find "$WORK_DIR" -maxdepth 1 -type f -name "*.jar" | head -n 1)
 if [ -z "$jar_file" ]; then
-    echo "Error: No .jar file found in $WORK_DIR"
+    echo "no .jar file found in $WORK_DIR"
     exit 1
 fi
-jar_name=$(basename "$jar_file")
+JAR_FILE=$(basename "$jar_file")
 
-# 複製模板腳本到目標 server 的 scripts 子目錄
+SERVICE_PATH="/etc/systemd/system/minecraft-$SERVER_FOLDER.service"
+SERVICE_TEMPLATE="$SCRIPTS_DIR/minecraft_template.service"
+
 cp "$SCRIPTS_DIR/start_template.sh" "$SCRIPTS_TARGET_DIR/start.sh"
 cp "$SCRIPTS_DIR/stop_template.sh" "$SCRIPTS_TARGET_DIR/stop.sh"
 cp "$SCRIPTS_DIR/backup_template.sh" "$SCRIPTS_TARGET_DIR/backup.sh"
+cp -f "$SERVICE_TEMPLATE" "$SERVICE_PATH"
 
-# 替換模板中的 SERVER_DIR、BACKUP_DIR、JAR_FILE
 sed -i "s|^SERVER_DIR=.*|SERVER_DIR=\"$WORK_DIR\"|" "$SCRIPTS_TARGET_DIR/start.sh"
-sed -i "s|^JAR_FILE=.*|JAR_FILE=\"$jar_name\"|" "$SCRIPTS_TARGET_DIR/start.sh"
+sed -i "s|^JAR_FILE=.*|JAR_FILE=\"$JAR_FILE\"|" "$SCRIPTS_TARGET_DIR/start.sh"
 sed -i "s|^SERVER_DIR=.*|SERVER_DIR=\"$WORK_DIR\"|" "$SCRIPTS_TARGET_DIR/stop.sh"
 sed -i "s|^SERVER_DIR=.*|SERVER_DIR=\"$WORK_DIR\"|" "$SCRIPTS_TARGET_DIR/backup.sh"
 sed -i "s|^BACKUP_DIR=.*|BACKUP_DIR=\"$BACKUP_DIR/$SERVER_FOLDER\"|" "$SCRIPTS_TARGET_DIR/backup.sh"
-
-chmod +x "$SCRIPTS_TARGET_DIR/"*.sh
-
-# 建立 systemd 服務文件
-SERVICE_TEMPLATE="$SCRIPTS_DIR/minecraft_template.service"
-SERVICE_PATH="/etc/systemd/system/minecraft-$SERVER_FOLDER.service"
-
-if [ ! -f "$SERVICE_TEMPLATE" ]; then
-    echo "Error: Service template not found at $SERVICE_TEMPLATE"
-    exit 1
-fi
-
-sed \
+sed -i \
     -e "s|%SERVER_FOLDER%|$SERVER_FOLDER|g" \
     -e "s|%WORK_DIR%|$WORK_DIR|g" \
-    "$SERVICE_TEMPLATE" > "$SERVICE_PATH"
+    "$SERVICE_PATH"
 
+chmod 755 "$SCRIPTS_TARGET_DIR/"*.sh
 chmod 644 "$SERVICE_PATH"
-systemctl daemon-reload
 
-# 修改 eula 與 server.properties
 check_and_modify_eula "$WORK_DIR/eula.txt"
 check_and_modify_server_properties "$WORK_DIR/server.properties"
 
-# 安裝 crontab 備份任務
 CRON_JOB="0 4 * * * $SCRIPTS_TARGET_DIR/backup.sh >> $WORK_DIR/backup.log 2>&1"
+
 (crontab -l 2>/dev/null | grep -F "$WORK_DIR/backup.sh") >/dev/null
 if [ $? -ne 0 ]; then
-    echo "[INFO] Adding cron job for daily backup at 04:00..."
+    echo "adding cron job for daily backup at 04:00..."
     (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-    echo "[INFO] Cron job added."
+    echo "cron job added."
 else
-    echo "[INFO] Cron job for backup already exists. Skipping."
+    echo "cron job for backup already exists. Skipping."
 fi
 
-# 設定 manage.sh 可執行
-MANAGE_SCRIPT="$ROOT_DIR/manage.sh"
-if [ -f "$MANAGE_SCRIPT" ]; then
-    chmod +x "$MANAGE_SCRIPT"
-    echo "[INFO] Ensured manage.sh is executable."
-fi
-
-# 啟用服務但不啟動
-echo "Systemd service installed at: $SERVICE_PATH"
+systemctl daemon-reload
 systemctl enable "minecraft-$SERVER_FOLDER"
-echo "[INFO] Service enabled but NOT started. Use './manage.sh start' to manually start the server."
 
-echo "Installation completed successfully."
+echo "installation completed successfully"
+echo "start the server with './manage.sh start'"
