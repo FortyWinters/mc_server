@@ -91,8 +91,8 @@ check_and_stop_other_services
 
 jar_file=$(find "$WORK_DIR" -maxdepth 1 -type f -name "*.jar" | head -n 1)
 if [ -z "$jar_file" ]; then
-    echo "no .jar file found in $WORK_DIR"
-    exit 1
+    echo "No .jar file found in $WORK_DIR, using default.jar"
+    jar_file="$WORK_DIR/default.jar"
 fi
 JAR_FILE=$(basename "$jar_file")
 
@@ -135,4 +135,5 @@ systemctl daemon-reload
 systemctl enable "minecraft-$SERVER_FOLDER"
 
 echo "installation completed successfully"
-echo "start the server with './manage.sh start'"
+echo "you need modify $WORK_DIR/scripts/start.sh at first"
+echo "then start the server with './manage.sh start'"
