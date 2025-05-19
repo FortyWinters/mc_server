@@ -46,7 +46,7 @@ git clone https://github.com/FortyWinters/minecraft-server-kit.git /opt/minecraf
 
 2. **手动启动一次整合包**
 
-   启动成功后，一般会自动下载需要的文件，并手动关闭服务
+   启动后一般会自动下载需要的文件，启动成功后手动关闭服务
 
    修改`/opt/minecraft/server/1,20,1/scriptrs/start.sh`
 
