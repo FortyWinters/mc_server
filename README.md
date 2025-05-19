@@ -44,9 +44,13 @@ git clone https://github.com/FortyWinters/minecraft-server-kit.git /opt/minecraf
    /opt/minecraft/server/1.20.1/
    ```
 
-2. **至少需要包含以下文件：**
+2. **手动启动一次整合包**
 
-   - `server.jar`（服务器核心）
+   启动成功后，一般会自动下载需要的文件，并手动关闭服务
+
+   修改`/opt/minecraft/server/1,20,1/scriptrs/start.sh`
+
+   将本整合包的启动指令添加到文件底
 
 ---
 
